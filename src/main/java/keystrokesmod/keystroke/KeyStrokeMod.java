@@ -1,5 +1,6 @@
 package keystrokesmod.keystroke;
 
+import keystrokesmod.client.command.FakePlayerCommand;
 import keystrokesmod.client.main.Raven;
 import net.minecraft.client.Minecraft;
 import net.minecraftforge.client.ClientCommandHandler;
@@ -19,6 +20,7 @@ public class KeyStrokeMod {
     @Mod.EventHandler
     public void init(FMLInitializationEvent event) {
         ClientCommandHandler.instance.registerCommand(new KeyStrokeCommand());
+        ClientCommandHandler.instance.registerCommand(new FakePlayerCommand());
         MinecraftForge.EVENT_BUS.register(new KeyStrokeRenderer());
         MinecraftForge.EVENT_BUS.register(this);
         Raven.init();

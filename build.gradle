@@ -71,7 +71,6 @@ configurations {
 
 dependencies {
     implementation group: 'commons-io', name: 'commons-io', version: '2.11.0'
-    embed(fileTree(dir: "libs", include: "discord-rpc.jar"))
 
     embed('org.spongepowered:mixin:0.6-SNAPSHOT') {
 
