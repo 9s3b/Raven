@@ -58,6 +58,10 @@ public class Hitflick extends Module {
         flickYaw = originalYaw + angle;
         isFlicking = true;
         flickUntil = System.currentTimeMillis() + (long) flickDuration.getInput();
+
+        if (!silent.isToggled()) {
+            mc.thePlayer.rotationYaw = flickYaw;
+        }
     }
 
     @Subscribe
@@ -71,6 +75,7 @@ public class Hitflick extends Module {
             }
         } else {
             isFlicking = false;
+            e.setYaw(originalYaw);
             if (!silent.isToggled()) {
                 mc.thePlayer.rotationYaw = originalYaw;
             }

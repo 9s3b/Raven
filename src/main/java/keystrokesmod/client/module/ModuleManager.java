@@ -138,6 +138,7 @@ import keystrokesmod.client.module.modules.other.WaterBucket;
 
 import keystrokesmod.client.module.modules.other.Blink;
 
+import keystrokesmod.client.module.modules.player.AntiAFK;
 import keystrokesmod.client.module.modules.player.AutoArmour;
 
 import keystrokesmod.client.module.modules.player.AutoEat;
@@ -391,6 +392,7 @@ public class ModuleManager {
         addModule(new ConfigSettings());
 
         addModule(new Parkour());
+        addModule(new AntiAFK());
 
         addModule(new Disabler());
 
