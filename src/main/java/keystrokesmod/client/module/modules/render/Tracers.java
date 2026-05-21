@@ -30,7 +30,7 @@ public class Tracers extends Module {
         this.registerSetting(a = new TickSetting("Show invis", true));
         this.registerSetting(f = new SliderSetting("Line Width", 1.0D, 1.0D, 5.0D, 1.0D));
         this.registerSetting(sl = new SliderSetting("Distance", 1.0D, 1.0D, 512.0D, 1.0D));
-        this.registerSetting(rgb = new RGBSetting("Color:", 0, 255, 0));
+        this.registerSetting(rgb = new RGBSetting("Color:", 255, 100, 0));
         this.registerSetting(e = new TickSetting("Rainbow", false));
         this.registerSetting(o = new TickSetting("Redshift w distance", false));
     }

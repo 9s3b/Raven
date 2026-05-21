@@ -13,6 +13,7 @@ import keystrokesmod.client.module.setting.Setting;
 import keystrokesmod.client.utils.RenderUtils;
 import keystrokesmod.client.utils.font.FontUtil;
 import net.minecraft.client.renderer.GlStateManager;
+import net.minecraft.client.gui.ScaledResolution;
 
 public class ModuleComponent extends Component {
     public Module mod;
@@ -20,6 +21,8 @@ public class ModuleComponent extends Component {
     public ArrayList<SettingComponent> settings = new ArrayList<>();
     public BindComponent bind;
     public int aHeight = 20;
+    public int scrollOffset = 0;
+    public int maxScrollOffset = 0;
 
     public ModuleComponent(Module mod, CategoryComponent p) {
         this.mod = mod;
@@ -87,14 +90,19 @@ public class ModuleComponent extends Component {
         RenderUtils.drawRoundedRect(x, y, x1, y1, 12, t, new boolean[] {false,true,true,false} );
     }
 
-    @Override
-    public void draw(int mouseX, int mouseY) {
+    public void draw(int mouseX, int mouseY, boolean last) {
 
         //background
         GlStateManager.pushMatrix();
         GlStateManager.pushAttrib();
-        if (GuiModule.showGradientEnabled() && mod.isEnabled()) v(x, y, x2, y + aHeight, GuiModule.getEnabledBottomRGB((((y + aHeight))) * 20), GuiModule.getEnabledTopRGB((y) * 20));
-        if (GuiModule.showGradientDisabled() && !mod.isEnabled()) v(x, y, x2, y + aHeight, GuiModule.getDisabledBottomRGB(((y + aHeight)) * 20), GuiModule.getDisabledTopRGB((y) * 20));
+        if (GuiModule.showGradientEnabled() && mod.isEnabled()) {
+            if (last && GuiModule.isRoundedToggled()) vr(x, y, x2, y + aHeight, GuiModule.getEnabledBottomRGB((((y + aHeight))) * 20), GuiModule.getEnabledTopRGB((y) * 20));
+            else v(x, y, x2, y + aHeight, GuiModule.getEnabledBottomRGB((((y + aHeight))) * 20), GuiModule.getEnabledTopRGB((y) * 20));
+        }
+        if (GuiModule.showGradientDisabled() && !mod.isEnabled()) {
+             if (last && GuiModule.isRoundedToggled()) vr(x, y, x2, y + aHeight, GuiModule.getDisabledBottomRGB(((y + aHeight)) * 20), GuiModule.getDisabledTopRGB((y) * 20));
+             else v(x, y, x2, y + aHeight, GuiModule.getDisabledBottomRGB(((y + aHeight)) * 20), GuiModule.getDisabledTopRGB((y) * 20));
+        }
         GlStateManager.popAttrib();
         GlStateManager.popMatrix();
 
@@ -107,7 +115,17 @@ public class ModuleComponent extends Component {
 
         //settings
         if(category.getOpenModule() == this) {
-            int yOffset = 0;
+            // Apply scissor test to clip settings to the module area
+            GL11.glEnable(GL11.GL_SCISSOR_TEST);
+            int scaleFactor = new ScaledResolution(Raven.mc).getScaleFactor();
+            GL11.glScissor(
+                (x * scaleFactor), 
+                (Raven.mc.displayHeight - (y + aHeight + 300) * scaleFactor), // 300 is max visible height
+                (width * scaleFactor), 
+                (300 * scaleFactor)
+            );
+            
+            int yOffset = -scrollOffset; // Apply scroll offset
             for(SettingComponent setting : settings) {
                 if(!setting.visable) continue;
                 setting.setCoords(x, y + aHeight + yOffset);
@@ -119,8 +137,15 @@ public class ModuleComponent extends Component {
                 bind.draw(mouseX, mouseY);
                 yOffset += bind.getHeight();
             }
-            setDimensions(width, aHeight + yOffset + 3);
+            
+            GL11.glDisable(GL11.GL_SCISSOR_TEST);
+            setDimensions(width, aHeight + Math.min(yOffset + 3, 300 + 3)); // Limit height to visible area
         }
+    }
+
+    @Override
+    public void draw(int mouseX, int mouseY) {
+        draw(mouseX, mouseY, false);
     }
 
     @Override
@@ -160,6 +185,43 @@ public class ModuleComponent extends Component {
     @Override
     public void keyTyped(char t, int k) {
         bind.keyTyped(t,k);
+    }
+
+    @Override
+    public void scroll(float ss) {
+        if (category.getOpenModule() == this && settings.size() > 0) {
+            // Calculate max scroll offset based on total settings height vs available space
+            calculateMaxScrollOffset();
+            
+            // Apply scroll with bounds checking
+            scrollOffset -= ss;
+            if (scrollOffset < 0) scrollOffset = 0;
+            if (scrollOffset > maxScrollOffset) scrollOffset = maxScrollOffset;
+        }
+    }
+    
+    private void calculateMaxScrollOffset() {
+        if (settings.isEmpty()) {
+            maxScrollOffset = 0;
+            return;
+        }
+        
+        int totalSettingsHeight = 0;
+        for (SettingComponent setting : settings) {
+            if (setting.visable) {
+                totalSettingsHeight += setting.getHeight();
+            }
+        }
+        
+        // Add bind component height if module is bindable
+        if (mod.isBindable()) {
+            totalSettingsHeight += bind.getHeight();
+        }
+        
+        // Available space in the GUI (approximate)
+        int availableHeight = 300; // Adjust based on your GUI height
+        
+        maxScrollOffset = Math.max(0, totalSettingsHeight - availableHeight);
     }
 
 

@@ -10,6 +10,7 @@ import com.google.common.eventbus.EventBus;
 
 import keystrokesmod.client.clickgui.kv.KvCompactGui;
 import keystrokesmod.client.clickgui.raven.ClickGui;
+import keystrokesmod.client.clickgui.raven.ModernClickGui;
 import keystrokesmod.client.command.CommandManager;
 import keystrokesmod.client.config.ConfigManager;
 import keystrokesmod.client.event.forge.ForgeEventListener;
@@ -81,7 +82,7 @@ public class Raven {
     public static final String downloadLocation = "https://github.com/K-ov/Raven-bPLUS/raw/stable/build/libs/%5B1.8.9%5D%20BetterKeystrokes%20V-1.2.jar";
     public static final String discord = "https://discord.gg/UqJ8ngteud";
     public static String[] updateText = {
-            "Your version of Raven B++ (" + versionManager.getClientVersion().toString() + ") is outdated!",
+            "Your version of Raven BC (" + versionManager.getClientVersion().toString() + ") is outdated!",
             "Enter the command update into client CommandLine to open the download page",
             "or just enable the update module to get a message in chat.", "",
             "Newest version: " + versionManager.getLatestVersion().toString() };
@@ -91,6 +92,7 @@ public class Raven {
     public static final ModuleManager moduleManager = new ModuleManager();
 
     public static ClickGui clickGui;
+    public static ModernClickGui modernClickGui;
     public static KvCompactGui kvCompactGui;
     // public static TabGui tabGui;
 
@@ -124,6 +126,7 @@ public class Raven {
 
         commandManager = new CommandManager();
         clickGui = new ClickGui();
+        modernClickGui = new ModernClickGui();
         kvCompactGui = new KvCompactGui();
         configManager = new ConfigManager();
         clientConfig = new ClientConfig();

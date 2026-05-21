@@ -102,7 +102,22 @@ public class LeftClicker extends Module {
     public void onDisable() {
         this.leftDownTime = 0L;
         this.leftUpTime = 0L;
+        this.leftDown = false;
+        this.leftn = false;
+        this.leftk = 0L;
+        this.leftl = 0L;
+        this.leftm = 0;
+        this.breakHeld = false;
+        this.hitSelected = false;
         autoClickerEnabled = false;
+        
+        // Reset mouse button states to prevent stuck clicking
+        Utils.Client.setMouseButtonState(0, false);
+        Utils.Client.setMouseButtonState(1, false);
+        
+        // Reset key bind states
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindAttack.getKeyCode(), false);
+        KeyBinding.setKeyBindState(mc.gameSettings.keyBindUseItem.getKeyCode(), false);
     }
 
     @Subscribe
@@ -242,6 +257,7 @@ public class LeftClicker extends Module {
     }
 
     public void leftClickExecute(int key) {
+        long currentTime = System.currentTimeMillis();
 
         if (breakBlock())
             return;
@@ -270,23 +286,34 @@ public class LeftClicker extends Module {
             }
         }
 
+        // Only execute click logic if we have valid timing and mouse is held
         if ((this.leftUpTime > 0L) && (this.leftDownTime > 0L)) {
-            if ((System.currentTimeMillis() > this.leftUpTime) && leftDown) {
+            if (currentTime > this.leftUpTime && leftDown) {
+                // Execute click
                 if (sound.isToggled())
 					SoundUtils.playSound(soundMode.getMode().name());
                 KeyBinding.setKeyBindState(key, true);
                 KeyBinding.onTick(key);
                 this.genLeftTimings();
-                Utils.Client.setMouseButtonState(0, true);
+                Utils.Client.setMouseButtonState(0, false); // Release after click
                 leftDown = false;
-            } else if (System.currentTimeMillis() > this.leftDownTime) {
-                KeyBinding.setKeyBindState(key, false);
-                leftDown = true;
-                Utils.Client.setMouseButtonState(0, false);
+            } else if (currentTime > this.leftDownTime && !leftDown) {
+                // Prepare for next click only if mouse is still held
+                if (Mouse.isButtonDown(0)) {
+                    leftDown = true;
+                    Utils.Client.setMouseButtonState(0, false); // Ensure released state
+                } else {
+                    // Mouse released, reset timing
+                    this.leftDownTime = 0L;
+                    this.leftUpTime = 0L;
+                }
             }
-        } else
-			this.genLeftTimings();
-
+        } else {
+            // Generate initial timing only if mouse is held
+            if (Mouse.isButtonDown(0)) {
+                this.genLeftTimings();
+            }
+        }
     }
 
     public void genLeftTimings() {

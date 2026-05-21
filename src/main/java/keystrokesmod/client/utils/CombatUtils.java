@@ -30,28 +30,26 @@ public class CombatUtils {
     }
 
     public static boolean isTeam(EntityPlayer player, Entity entity) {
-        if (entity instanceof EntityPlayer && ((EntityPlayer) entity).getTeam() != null && player.getTeam() != null) {
-            Character entity_3 = entity.getDisplayName().getFormattedText().charAt(3);
-            Character player_3 = player.getDisplayName().getFormattedText().charAt(3);
-            Character entity_2 = entity.getDisplayName().getFormattedText().charAt(2);
-            Character player_2 = player.getDisplayName().getFormattedText().charAt(2);
-            boolean isTeam = false;
-            if (entity_3.equals(player_3) && entity_2.equals(player_2)) {
-                isTeam = true;
-            } else {
-                Character entity_1 = entity.getDisplayName().getFormattedText().charAt(1);
-                Character player_1 = player.getDisplayName().getFormattedText().charAt(1);
-                Character entity_0 = entity.getDisplayName().getFormattedText().charAt(0);
-                Character player_0 = player.getDisplayName().getFormattedText().charAt(0);
-                if (entity_1.equals(player_1) && Character.isDigit(0) && entity_0.equals(player_0)) {
-                    isTeam = true;
+        if (!(entity instanceof EntityPlayer)) return false;
+        EntityPlayer other = (EntityPlayer) entity;
+
+        // 1. Vanilla scoreboard team check
+        if (player.getTeam() != null && other.getTeam() != null) {
+            return player.isOnSameTeam(other);
+        }
+
+        // 2. Display name color code check
+        try {
+            String playerDisplay = player.getDisplayName().getFormattedText();
+            String otherDisplay = other.getDisplayName().getFormattedText();
+            if (playerDisplay.length() > 1 && otherDisplay.length() > 1) {
+                if (playerDisplay.charAt(1) == otherDisplay.charAt(1)) {
+                    return true;
                 }
             }
+        } catch (Exception ignored) {}
 
-            return isTeam;
-        } else {
-            return true;
-        }
+        return false;
     }
 
 }

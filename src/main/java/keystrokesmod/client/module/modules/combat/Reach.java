@@ -28,7 +28,7 @@ public class Reach extends Module {
     }
 
     public static double getReach() {
-        if(la.isEnabled())
+        if(la != null && la.isEnabled())
             return KillAura.reach.getInput();
 
         double normal = mc.playerController.extendedReach()? 5 : 3;

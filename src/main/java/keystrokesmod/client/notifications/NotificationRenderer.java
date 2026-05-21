@@ -9,7 +9,6 @@ import keystrokesmod.client.module.Module;
 import keystrokesmod.client.module.modules.client.GuiModule;
 import keystrokesmod.client.utils.Utils;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Gui;
 
 public class NotificationRenderer {
     public static final NotificationRenderer notificationRenderer = new NotificationRenderer();
@@ -26,10 +25,8 @@ public class NotificationRenderer {
                 || ClientConfig.applyingConfig)
             return;
 
-        if (!m.getClass().equals(Gui.class)) {
-            String s = m.isEnabled() ? "enabled" : "disabled";
-            NotificationManager
-                    .show(new Notification(NotificationType.INFO, "Module " + s, m.getName() + " has been " + s, 1));
-        }
+        String s = m.isEnabled() ? "enabled" : "disabled";
+        NotificationManager
+                .show(new Notification(NotificationType.INFO, "Module " + s, m.getName() + " has been " + s, 1));
     }
 }

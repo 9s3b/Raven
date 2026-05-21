@@ -50,7 +50,38 @@ public class KvCompactGui extends GuiScreen {
 
     @Override
     public void drawScreen(int mouseX, int mouseY, float partialTicks) {
-        //drawing container
+        long currentTime = System.currentTimeMillis();
+        
+        // Enhanced animated background
+        drawRect(0, 0, this.width, this.height, 0x90000000);
+        
+        // Add subtle gradient overlay
+        for (int i = 0; i < 4; i++) {
+            int alpha = (int) (15 * (1 - i * 0.25));
+            int gradientColor = (alpha << 24) | (0x15 << 16) | (0x15 << 8) | 0x15;
+            drawRect(0, i * (this.height / 4), this.width, (i + 1) * (this.height / 4), gradientColor);
+        }
+        
+        // Enhanced container with glow effect
+        float pulse = (float) Math.sin(currentTime * 0.003) * 0.5f + 0.5f;
+        int glowAlpha = (int) (30 + pulse * 15);
+        
+        // Draw glow effect
+        for (int i = 3; i >= 0; i--) {
+            int glowSize = i * 4;
+            int glowColor = (glowAlpha << 24) | Utils.Client.rainbowDraw(1, 0);
+            RenderUtils.drawBorderedRoundedRect(
+                    containerX - glowSize,
+                    containerY - glowSize,
+                    containerX + containerWidth + glowSize,
+                    containerY + containerHeight + glowSize,
+                    7 + glowSize,
+                    3,
+                    glowColor, 0x00000000);
+        }
+        
+        // Main container with enhanced border
+        int borderColor = Utils.Client.rainbowDraw(1, 0);
         RenderUtils.drawBorderedRoundedRect(
                 containerX,
                 containerY,
@@ -58,11 +89,27 @@ public class KvCompactGui extends GuiScreen {
                 containerY + containerHeight,
                 7,
                 3,
-                Utils.Client.rainbowDraw(1, 0), 0x80000000);
+                borderColor, 0x90000000);
 
-        //raven icon
+        // Enhanced raven icon with animation
         Minecraft.getMinecraft().getTextureManager().bindTexture(Raven.mResourceLocation);
-        GL11.glColor4f(1f, 1f, 1f, 1f);
+        GL11.glEnable(GL11.GL_BLEND);
+        
+        // Add glow behind icon
+        float iconPulse = (float) Math.sin(currentTime * 0.004) * 0.3f + 0.7f;
+        int iconGlowAlpha = (int) (iconPulse * 40);
+        for (int i = 2; i >= 0; i--) {
+            int glowSize = i * 3;
+            int glowColor = (iconGlowAlpha << 24) | (0xFF8C00 << 16) | (0x8C00 << 8) | 0x00;
+            RenderUtils.drawRoundedRect(
+                    containerX + 1 - glowSize,
+                    containerY + 1 - glowSize,
+                    containerX + (horizontalBoarderY - containerY) + 1 + glowSize,
+                    containerY + (horizontalBoarderY - containerY) + 1 + glowSize,
+                    5 + glowSize, glowColor);
+        }
+        
+        GL11.glColor4f(1f, 1f, 1f, 0.9f);
         Gui.drawModalRectWithCustomSizedTexture(
                 containerX + 1,
                 containerY + 1,
@@ -72,19 +119,58 @@ public class KvCompactGui extends GuiScreen {
                 (horizontalBoarderY - containerY),
                 (horizontalBoarderY - containerY),
                 (horizontalBoarderY - containerY));
+        GL11.glDisable(GL11.GL_BLEND);
 
-        //drawing horizontal boarder
+        // Enhanced horizontal border with animation
+        float borderPulse = (float) Math.sin(currentTime * 0.005) * 0.4f + 0.6f;
+        int borderAlpha = (int) (255 * borderPulse);
+        int animatedBorderColor = (borderAlpha << 24) | Utils.Client.rainbowDraw(1, 0);
+        
+        // Draw main border
         Gui.drawRect(
                 containerX,
                 horizontalBoarderY,
                 containerX + containerWidth,
                 horizontalBoarderY + 1,
-                Utils.Client.rainbowDraw(1, 0));
+                animatedBorderColor);
+        
+        // Add glow effect to border
+        for (int i = 1; i >= 0; i--) {
+            int borderGlowAlpha = (int) (borderPulse * 30 * (1 - i * 0.5));
+            int glowColor = (borderGlowAlpha << 24) | Utils.Client.rainbowDraw(1, 0);
+            Gui.drawRect(
+                    containerX,
+                    horizontalBoarderY - i,
+                    containerX + containerWidth,
+                    horizontalBoarderY + 1 + i,
+                    glowColor);
+        }
 
-        for (KvSection section : sections)
+        // Enhanced sections with animations
+        for (KvSection section : sections) {
             section.drawSection(mouseX, mouseY, partialTicks);
+        }
 
         currentSection.drawScreen(mouseX, mouseY, partialTicks);
+        
+        // Add subtle particle effects or additional visual enhancements
+        drawFloatingParticles(currentTime);
+    }
+    
+    private void drawFloatingParticles(long currentTime) {
+        // Add subtle floating particles for visual enhancement
+        GL11.glEnable(GL11.GL_BLEND);
+        for (int i = 0; i < 5; i++) {
+            float particleX = containerX + (float) (Math.sin(currentTime * 0.001 + i) * containerWidth * 0.8);
+            float particleY = containerY + (float) (Math.cos(currentTime * 0.0015 + i * 2) * containerHeight * 0.8);
+            float particleSize = 2 + (float) Math.sin(currentTime * 0.003 + i) * 1;
+            int particleAlpha = (int) (30 + Math.sin(currentTime * 0.002 + i * 3) * 20);
+            int particleColor = (particleAlpha << 24) | (0xFF8C00 << 16) | (0x8C00 << 8) | 0x00;
+            
+            drawRect((int) (particleX - particleSize/2), (int) (particleY - particleSize/2), 
+                    (int) (particleX + particleSize/2), (int) (particleY + particleSize/2), particleColor);
+        }
+        GL11.glDisable(GL11.GL_BLEND);
     }
 
     @Override
