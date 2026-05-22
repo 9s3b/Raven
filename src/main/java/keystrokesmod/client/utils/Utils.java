@@ -24,7 +24,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.lwjgl.Sys;
 import org.lwjgl.input.Mouse;
@@ -86,11 +88,31 @@ import net.minecraft.util.Vec3;
 import net.minecraftforge.client.event.MouseEvent;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+import net.minecraft.network.play.client.C03PacketPlayer;
 
 public class Utils {
     private static final Random rand = new Random();
     public static final Minecraft mc = Minecraft.getMinecraft();
     public static final String md = "Mode: ";
+
+    public static net.minecraft.util.Timer getTimer() {
+        return ObfuscationReflectionHelper.getPrivateValue(Minecraft.class, Minecraft.getMinecraft(), "timer",
+                "field_71428_T");
+    }
+
+    public static void resetTimer() {
+        try {
+            getTimer().timerSpeed = 1.0F;
+        } catch (NullPointerException ignored) {
+        }
+    }
+
+    public static void setPacketOnGround(C03PacketPlayer packet, boolean onGround) {
+        try {
+            ObfuscationReflectionHelper.setPrivateValue(C03PacketPlayer.class, packet, onGround, "onGround", "field_149474_h");
+        } catch (Exception ignored) {
+        }
+    }
 
     public static class Player {
 
@@ -317,6 +339,16 @@ public class Utils {
             return false;
         }
 
+        public static int getBlockSlot() {
+            for (int i = 0; i < 9; i++) {
+                ItemStack stack = mc.thePlayer.inventory.getStackInSlot(i);
+                if (stack != null && stack.getItem() instanceof ItemBlock && ((ItemBlock) stack.getItem()).getBlock().isFullBlock()) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         public static int getBlockAmountInCurrentStack(int currentItem) {
             if (mc.thePlayer.inventory.getStackInSlot(currentItem) == null)
                 return 0;
@@ -324,6 +356,16 @@ public class Utils {
             if (itemStack.getItem() instanceof ItemBlock)
                 return itemStack.stackSize;
             return 0;
+        }
+
+        public static void placeBlock(BlockPos pos) {
+            if (pos == null) return;
+            MovingObjectPosition mop = mc.objectMouseOver;
+            if (mop != null && mop.typeOfHit == MovingObjectPosition.MovingObjectType.BLOCK) {
+                if (mc.playerController.onPlayerRightClick(mc.thePlayer, mc.theWorld, mc.thePlayer.getHeldItem(), mop.getBlockPos(), mop.sideHit, mop.hitVec)) {
+                    mc.thePlayer.swingItem();
+                }
+            }
         }
 
         /**
@@ -581,7 +623,6 @@ public class Utils {
                 getTimer().timerSpeed = 1.0F;
             } catch (NullPointerException ignored) {
             }
-
         }
 
         public static boolean autoClickerClicking() {
@@ -1107,6 +1148,7 @@ public class Utils {
         private static final double p2 = 6.283185307179586D;
         private static final Minecraft mc = Minecraft.getMinecraft();
         public static boolean ring_c;
+        public static Map<Integer, Double> healthDisplay = new ConcurrentHashMap<>();
 
         public static void re(BlockPos bp, int color, boolean shade) {
             if (bp != null) {
@@ -1155,22 +1197,38 @@ public class Utils {
                     GlStateManager.disableDepth();
                     GL11.glScalef(0.03F + d, 0.03F + d, 0.03F + d);
                     int outline = Color.black.getRGB();
-                    net.minecraft.client.gui.Gui.drawRect(-20, -1, -26, 75, outline);
-                    net.minecraft.client.gui.Gui.drawRect(20, -1, 26, 75, outline);
-                    net.minecraft.client.gui.Gui.drawRect(-20, -1, 21, 5, outline);
-                    net.minecraft.client.gui.Gui.drawRect(-20, 70, 21, 75, outline);
+                    int hs = 22;
+                    int vs = 75;
+                    int cl = 8;
+                    int cw = 2;
+                    // outline corners
+                    net.minecraft.client.gui.Gui.drawRect(-hs, 0, -hs + cl, cw, outline);
+                    net.minecraft.client.gui.Gui.drawRect(-hs, 0, -hs + cw, cl, outline);
+                    net.minecraft.client.gui.Gui.drawRect(hs - cl, 0, hs, cw, outline);
+                    net.minecraft.client.gui.Gui.drawRect(hs - cw, 0, hs, cl, outline);
+                    net.minecraft.client.gui.Gui.drawRect(-hs, vs - cw, -hs + cl, vs, outline);
+                    net.minecraft.client.gui.Gui.drawRect(-hs, vs - cl, -hs + cw, vs, outline);
+                    net.minecraft.client.gui.Gui.drawRect(hs - cl, vs - cw, hs, vs, outline);
+                    net.minecraft.client.gui.Gui.drawRect(hs - cw, vs - cl, hs, vs, outline);
                     if (color != 0) {
-                        net.minecraft.client.gui.Gui.drawRect(-21, 0, -25, 74, color);
-                        net.minecraft.client.gui.Gui.drawRect(21, 0, 25, 74, color);
-                        net.minecraft.client.gui.Gui.drawRect(-21, 0, 24, 4, color);
-                        net.minecraft.client.gui.Gui.drawRect(-21, 71, 25, 74, color);
+                        // color corners (inset 1px)
+                        net.minecraft.client.gui.Gui.drawRect(-hs + 1, 1, -hs + cl, cw - 1, color);
+                        net.minecraft.client.gui.Gui.drawRect(-hs + 1, 1, -hs + cw - 1, cl, color);
+                        net.minecraft.client.gui.Gui.drawRect(hs - cl + 1, 1, hs - 1, cw - 1, color);
+                        net.minecraft.client.gui.Gui.drawRect(hs - cw + 1, 1, hs - 1, cl, color);
+                        net.minecraft.client.gui.Gui.drawRect(-hs + 1, vs - cw + 1, -hs + cl, vs - 1, color);
+                        net.minecraft.client.gui.Gui.drawRect(-hs + 1, vs - cl, -hs + cw - 1, vs - 1, color);
+                        net.minecraft.client.gui.Gui.drawRect(hs - cl + 1, vs - cw + 1, hs - 1, vs - 1, color);
+                        net.minecraft.client.gui.Gui.drawRect(hs - cw + 1, vs - cl, hs - 1, vs - 1, color);
                     } else {
                         int st = Client.rainbowDraw(2L, 0L);
                         int en = Client.rainbowDraw(2L, 1000L);
-                        dGR(-21, 0, -25, 74, st, en);
-                        dGR(21, 0, 25, 74, st, en);
-                        net.minecraft.client.gui.Gui.drawRect(-21, 0, 21, 4, en);
-                        net.minecraft.client.gui.Gui.drawRect(-21, 71, 21, 74, st);
+                        dGR(-hs + 1, 1, -hs + cl, cw - 1, st, en);
+                        dGR(-hs + 1, 1, -hs + cw - 1, cl, st, en);
+                        dGR(hs - cl + 1, 1, hs - 1, cw - 1, st, en);
+                        dGR(hs - cw + 1, 1, hs - 1, cl, st, en);
+                        net.minecraft.client.gui.Gui.drawRect(-hs + 1, vs - cw + 1, hs - 1, vs - 1, en);
+                        net.minecraft.client.gui.Gui.drawRect(-hs + 1, vs - cl, hs - 1, vs - 1, st);
                     }
 
                     GlStateManager.enableDepth();
@@ -1179,18 +1237,30 @@ public class Utils {
                     if (type == 4) {
                         EntityLivingBase en = (EntityLivingBase) e;
                         double r = en.getHealth() / en.getMaxHealth();
-                        int b = (int) (74.0D * r);
+                        int entityId = en.getEntityId();
+                        double display = healthDisplay.getOrDefault(entityId, r);
+                        if (Math.abs(display - r) > 0.005) {
+                            display += (r - display) * 0.12;
+                        } else {
+                            display = r;
+                        }
+                        healthDisplay.put(entityId, display);
+                        int b = (int) (74.0D * display);
                         int hc = r < 0.3D ? Color.red.getRGB()
                                 : (r < 0.5D ? Color.orange.getRGB()
                                         : (r < 0.7D ? Color.yellow.getRGB() : Color.green.getRGB()));
+                        int trailColor = Color.red.getRGB();
                         GL11.glTranslated(x, y - 0.2D, z);
                         GL11.glRotated(-mc.getRenderManager().playerViewY, 0.0D, 1.0D, 0.0D);
                         GlStateManager.disableDepth();
                         GL11.glScalef(0.03F + d, 0.03F + d, 0.03F + d);
                         i = (int) (21.0D + (shift * 2.0D));
-                        net.minecraft.client.gui.Gui.drawRect(i, -1, i + 5, 75, Color.black.getRGB());
-                        net.minecraft.client.gui.Gui.drawRect(i + 1, b, i + 4, 74, Color.darkGray.getRGB());
-                        net.minecraft.client.gui.Gui.drawRect(i + 1, 0, i + 4, b, hc);
+                        net.minecraft.client.gui.Gui.drawRect(i, -1, i + 3, 75, Color.black.getRGB());
+                        net.minecraft.client.gui.Gui.drawRect(i + 1, b, i + 2, 74, Color.darkGray.getRGB());
+                        net.minecraft.client.gui.Gui.drawRect(i + 1, 0, i + 2, (int) (74.0D * r), hc);
+                        if (display > r + 0.01) {
+                            net.minecraft.client.gui.Gui.drawRect(i + 1, (int) (74.0D * r), i + 2, b, trailColor);
+                        }
                         GlStateManager.enableDepth();
                     } else if (type == 6)
                         d3p(x, y, z, 0.699999988079071D, 45, 1.5F, color, color == 0);
@@ -1217,6 +1287,33 @@ public class Utils {
                                 d2p(0.0D, 95 + (10 - i), 2, 4, color);
 
                             d2p(0.0D, 95.0D, 8, 3, color);
+                            GlStateManager.enableDepth();
+                        } else if (type == 7) {
+                            GL11.glTranslated(x, y - 0.2D, z);
+                            GL11.glRotated(-mc.getRenderManager().playerViewY, 0.0D, 1.0D, 0.0D);
+                            GlStateManager.disableDepth();
+                            GL11.glScalef(0.03F + d, 0.03F + d, 0.03F + d);
+
+                            int boxWidth = 20;
+                            int boxHeight = 75;
+                            int lineLen = 10;
+
+                            // Top Left
+                            net.minecraft.client.gui.Gui.drawRect(-boxWidth, 0, -boxWidth + lineLen, 2, color);
+                            net.minecraft.client.gui.Gui.drawRect(-boxWidth, 0, -boxWidth + 2, lineLen, color);
+
+                            // Top Right
+                            net.minecraft.client.gui.Gui.drawRect(boxWidth - lineLen, 0, boxWidth, 2, color);
+                            net.minecraft.client.gui.Gui.drawRect(boxWidth - 2, 0, boxWidth, lineLen, color);
+
+                            // Bottom Left
+                            net.minecraft.client.gui.Gui.drawRect(-boxWidth, boxHeight - 2, -boxWidth + lineLen, boxHeight, color);
+                            net.minecraft.client.gui.Gui.drawRect(-boxWidth, boxHeight - lineLen, -boxWidth + 2, boxHeight, color);
+
+                            // Bottom Right
+                            net.minecraft.client.gui.Gui.drawRect(boxWidth - lineLen, boxHeight - 2, boxWidth, boxHeight, color);
+                            net.minecraft.client.gui.Gui.drawRect(boxWidth - 2, boxHeight - lineLen, boxWidth, boxHeight, color);
+
                             GlStateManager.enableDepth();
                         } else {
                             AxisAlignedBB bbox = e.getEntityBoundingBox().expand(0.1D + expand, 0.1D + expand,

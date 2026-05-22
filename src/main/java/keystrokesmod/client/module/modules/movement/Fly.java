@@ -1,128 +1,141 @@
 package keystrokesmod.client.module.modules.movement;
 
 import com.google.common.eventbus.Subscribe;
+import keystrokesmod.client.event.impl.PacketEvent;
 import keystrokesmod.client.event.impl.TickEvent;
 import keystrokesmod.client.module.Module;
-import keystrokesmod.client.module.setting.impl.DescriptionSetting;
+import keystrokesmod.client.module.setting.impl.ComboSetting;
 import keystrokesmod.client.module.setting.impl.SliderSetting;
 import keystrokesmod.client.utils.Utils;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.play.client.C03PacketPlayer;
 
 public class Fly extends Module {
-    private final Fly.VanFly vanFly = new VanFly();
-    private final Fly.GliFly gliFly = new Fly.GliFly();
-    public static DescriptionSetting dc;
-    public static SliderSetting a;
-    public static SliderSetting b;
-    private static final String c1 = "Vanilla";
-    private static final String c2 = "Glide";
+    public static ComboSetting mode;
+    public static SliderSetting speed;
+
+    // BlocksMC Variables
+    private boolean isTeleported = false;
+
+    // Hypixel Variables
+    private int tickCounter = 0;
+
+    // Glide Variables
+    private boolean opf = false;
 
     public Fly() {
         super("Fly", ModuleCategory.movement);
-        this.registerSetting(a = new SliderSetting("Value", 1.0D, 1.0D, 2.0D, 1.0D));
-        this.registerSetting(dc = new DescriptionSetting(Utils.md + c1));
-        this.registerSetting(b = new SliderSetting("Speed", 2.0D, 1.0D, 5.0D, 0.1D));
+        this.registerSetting(mode = new ComboSetting("Mode", Mode.Vanilla));
+        this.registerSetting(speed = new SliderSetting("Speed", 2.0D, 1.0D, 5.0D, 0.1D));
     }
 
+    @Override
     public void onEnable() {
-        switch ((int) a.getInput()) {
-        case 1:
-            this.vanFly.onEnable();
-            break;
-        case 2:
-            this.gliFly.onEnable();
-        }
+        if (mc.thePlayer == null) return;
+        isTeleported = false;
+        tickCounter = 0;
+        opf = false;
 
+        if (mode.getMode() == Mode.BlocksMC) {
+            mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(
+                    mc.thePlayer.posX,
+                    mc.thePlayer.posY - 0.05,
+                    mc.thePlayer.posZ,
+                    false
+            ));
+            mc.getNetHandler().addToSendQueue(new C03PacketPlayer.C04PacketPlayerPosition(
+                    mc.thePlayer.posX,
+                    mc.thePlayer.posY,
+                    mc.thePlayer.posZ,
+                    false
+            ));
+            isTeleported = true;
+        }
     }
 
+    @Override
     public void onDisable() {
-        switch ((int) a.getInput()) {
-        case 1:
-            this.vanFly.onDisable();
-            break;
-        case 2:
-            this.gliFly.onDisable();
-        }
-
+        if (mc.thePlayer == null) return;
+        mc.thePlayer.capabilities.isFlying = false;
+        mc.thePlayer.capabilities.setFlySpeed(0.05F);
+        Utils.Client.getTimer().timerSpeed = 1.0f;
     }
 
     @Subscribe
     public void onTick(TickEvent e) {
-        switch ((int) a.getInput()) {
-        case 1:
-            this.vanFly.update();
-            break;
-        case 2:
-            this.gliFly.update();
-        }
+        if (mc.thePlayer == null) return;
 
-    }
+        switch ((Mode) mode.getMode()) {
+            case Vanilla:
+                mc.thePlayer.motionY = 0.0D;
+                mc.thePlayer.capabilities.setFlySpeed((float) (0.05000000074505806D * speed.getInput()));
+                mc.thePlayer.capabilities.isFlying = true;
+                break;
+            case Glide:
+                if (mc.thePlayer.movementInput.moveForward > 0.0F) {
+                    if (!this.opf) {
+                        this.opf = true;
+                        if (mc.thePlayer.onGround) {
+                            mc.thePlayer.jump();
+                        }
+                    } else {
+                        if (mc.thePlayer.onGround || mc.thePlayer.isCollidedHorizontally) {
+                            this.disable();
+                            return;
+                        }
 
-    public void guiUpdate() {
-        switch ((int) a.getInput()) {
-        case 1:
-            dc.setDesc(Utils.md + c1);
-            break;
-        case 2:
-            dc.setDesc(Utils.md + c2);
-        }
-
-    }
-
-    class GliFly {
-        boolean opf;
-
-        public void onEnable() {
-        }
-
-        public void onDisable() {
-            this.opf = false;
-        }
-
-        public void update() {
-            if (Module.mc.thePlayer.movementInput.moveForward > 0.0F) {
-                if (!this.opf) {
-                    this.opf = true;
-                    if (Module.mc.thePlayer.onGround) {
-                        Module.mc.thePlayer.jump();
+                        double s = 1.94D * speed.getInput();
+                        double r = Math.toRadians(mc.thePlayer.rotationYaw + 90.0F);
+                        mc.thePlayer.motionX = s * Math.cos(r);
+                        mc.thePlayer.motionZ = s * Math.sin(r);
                     }
-                } else {
-                    if (Module.mc.thePlayer.onGround || Module.mc.thePlayer.isCollidedHorizontally) {
-                        Fly.this.disable();
-                        return;
-                    }
-
-                    double s = 1.94D * b.getInput();
-                    double r = Math.toRadians(Module.mc.thePlayer.rotationYaw + 90.0F);
-                    Module.mc.thePlayer.motionX = s * Math.cos(r);
-                    Module.mc.thePlayer.motionZ = s * Math.sin(r);
                 }
-            }
-
+                break;
+            case BlocksMC:
+                if (isTeleported) {
+                    mc.thePlayer.motionY = 0.0;
+                    if (!mc.thePlayer.onGround) {
+                        if (mc.thePlayer.ticksExisted % 7 == 0) {
+                            Utils.Client.getTimer().timerSpeed = 0.415f;
+                        } else {
+                            Utils.Client.getTimer().timerSpeed = 0.35f;
+                        }
+                    } else {
+                        Utils.Client.getTimer().timerSpeed = 1.0f;
+                    }
+                    
+                    if (mc.thePlayer.movementInput.moveForward != 0.0F || mc.thePlayer.movementInput.moveStrafe != 0.0F) {
+                        double s = speed.getInput();
+                        double r = Math.toRadians(mc.thePlayer.rotationYaw + 90.0F);
+                        mc.thePlayer.motionX = s * Math.cos(r);
+                        mc.thePlayer.motionZ = s * Math.sin(r);
+                    } else {
+                        mc.thePlayer.motionX = 0;
+                        mc.thePlayer.motionZ = 0;
+                    }
+                }
+                break;
+            case Hypixel:
+                Utils.Client.getTimer().timerSpeed = 1.0f;
+                tickCounter++;
+                if (tickCounter >= 2) {
+                    mc.thePlayer.setPosition(mc.thePlayer.posX, mc.thePlayer.posY + 1.0E-5, mc.thePlayer.posZ);
+                    tickCounter = 0;
+                }
+                break;
         }
     }
 
-    static class VanFly {
-        private final float dfs = 0.05F;
-
-        public void onEnable() {
-        }
-
-        public void onDisable() {
-            if (Minecraft.getMinecraft().thePlayer == null)
-                return;
-
-            if (Minecraft.getMinecraft().thePlayer.capabilities.isFlying) {
-                Minecraft.getMinecraft().thePlayer.capabilities.isFlying = false;
+    @Subscribe
+    public void onPacket(PacketEvent e) {
+        if (mode.getMode() == Mode.Hypixel) {
+            if (e.getPacket() instanceof C03PacketPlayer) {
+                Utils.setPacketOnGround((C03PacketPlayer) e.getPacket(), false);
             }
-
-            Minecraft.getMinecraft().thePlayer.capabilities.setFlySpeed(0.05F);
         }
+    }
 
-        public void update() {
-            Module.mc.thePlayer.motionY = 0.0D;
-            Module.mc.thePlayer.capabilities.setFlySpeed((float) (0.05000000074505806D * b.getInput()));
-            Module.mc.thePlayer.capabilities.isFlying = true;
-        }
+    public enum Mode {
+        Vanilla, Glide, BlocksMC, Hypixel
     }
 }

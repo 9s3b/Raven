@@ -5,6 +5,7 @@ import keystrokesmod.client.main.Raven;
 import keystrokesmod.client.module.Module;
 import keystrokesmod.client.module.setting.Setting;
 import keystrokesmod.client.module.setting.impl.ComboSetting;
+import keystrokesmod.client.module.setting.impl.SliderSetting;
 import keystrokesmod.client.module.setting.impl.TickSetting;
 import keystrokesmod.client.utils.ColorM;
 import keystrokesmod.client.utils.Utils;
@@ -13,20 +14,22 @@ public class GuiModule extends Module {
 
     private static ComboSetting preset;
 
-    private static TickSetting cleanUp, reset, betagui, rainbowNotification, notifications;
+    private static TickSetting cleanUp, reset, rainbowNotification, notifications, animeGirl;
+    private static SliderSetting animeGirlSize, animeGirlOpacity;
 
     public static int guiScale;
 
     public GuiModule() {
         super("Gui", ModuleCategory.client);
         withKeycode(54);
-
-        this.registerSetting(betagui = new TickSetting("beta gui (VERY BETA)", false));
         this.registerSetting(cleanUp = new TickSetting("Clean Up", false));
         this.registerSetting(reset = new TickSetting("Reset position", false));
         this.registerSetting(notifications = new TickSetting("Notifications", false));
         this.registerSetting(rainbowNotification = new TickSetting("Reset position", false));
-        this.registerSetting(preset = new ComboSetting("Preset", Preset.PlusPlus));
+        this.registerSetting(animeGirl = new TickSetting("Anime Girl", false));
+        this.registerSetting(animeGirlSize = new SliderSetting("Anime Girl Size", 202, 20, 500, 5));
+        this.registerSetting(animeGirlOpacity = new SliderSetting("Anime Girl Opacity", 80, 10, 100, 5));
+        this.registerSetting(preset = new ComboSetting("Preset", Preset.Orange));
     }
 
     @Override
@@ -44,19 +47,10 @@ public class GuiModule extends Module {
 
     @Override
     public void onEnable() {
-        if (Utils.Player.isPlayerInGame() && ((mc.currentScreen != Raven.clickGui) || (mc.currentScreen != Raven.kvCompactGui)))
-            if(betagui.isToggled()) {
-                guiScale = mc.gameSettings.guiScale;
-                mc.gameSettings.guiScale = 3;
-                mc.displayGuiScreen(Raven.kvCompactGui);
-                Raven.kvCompactGui.initGui();
-                Raven.kvCompactGui.initGui(); //no idea why this works
-            }
-            else {
-                mc.displayGuiScreen(Raven.clickGui);
-                Raven.clickGui.initMain();
-            }
-
+        if (Utils.Player.isPlayerInGame() && ((mc.currentScreen != Raven.clickGui) || (mc.currentScreen != Raven.kvCompactGui))) {
+            mc.displayGuiScreen(Raven.clickGui);
+            Raven.clickGui.initMain();
+        }
         this.disable();
     }
 
@@ -197,7 +191,7 @@ public class GuiModule extends Module {
     }
 
     public static boolean isRoundedToggled() {
-        return  getPresetMode().swing;
+        return  getPresetMode().roundedCorners;
     }
 
     public static boolean isBoarderToggled() {
@@ -210,6 +204,18 @@ public class GuiModule extends Module {
 
     public static boolean notifications() {
         return notifications.isToggled();
+    }
+
+    public static boolean animeGirlEnabled() {
+        return animeGirl.isToggled();
+    }
+
+    public static float getAnimeGirlSize() {
+        return (float) animeGirlSize.getInput();
+    }
+
+    public static float getAnimeGirlOpacity() {
+        return (float) animeGirlOpacity.getInput();
     }
 
     public enum Preset {
@@ -270,6 +276,174 @@ public class GuiModule extends Module {
                         in -> 0xFFFFFFFE,
                         in -> Utils.Client.astolfoColorsDraw(in, 10),
                         in -> Utils.Client.otherAstolfoColorsDraw(in, 10)
+                        ),
+
+        Orange( // name
+                        true, false, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.STATIC, // just leave this
+                        in -> 0xFFFFFFFE, // categoryNameRGB
+                        in -> 0xFF1A1A1A, // settingBackgroundRGB
+                        in -> 0xFF1A1A1A, // categoryBackgroundRGB
+                        in -> 0xFFFF8C00, // enabledTopRGB
+                        in -> 0xFFFF8C00, // enabledBottomRGB
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> 0xFF2A2A2A, // disabledTopRGB
+                        in -> 0xFF2A2A2A, // disabledBottomRGB
+                        in -> 0xFFCCCCCC, // disabledTextRGB
+                        in -> 0xFF121212, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        true, //boarder
+                        in -> 0xFFFF8C00,
+                        in -> 0xFFFF8C00,
+                        in -> 0xFF555555
+                        ),
+
+        Purple( // name
+                        true, false, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.STATIC, // just leave this
+                        in -> 0xFFFFFFFE, // categoryNameRGB
+                        in -> 0xFF1A1A2A, // settingBackgroundRGB
+                        in -> 0xFF1A1A2A, // categoryBackgroundRGB
+                        in -> 0xFF9B59B6, // enabledTopRGB
+                        in -> 0xFF8E44AD, // enabledBottomRGB
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> 0xFF2A2A3A, // disabledTopRGB
+                        in -> 0xFF2A2A3A, // disabledBottomRGB
+                        in -> 0xFFCCCCCC, // disabledTextRGB
+                        in -> 0xFF0F0F1A, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        true, //boarder
+                        in -> 0xFF9B59B6,
+                        in -> 0xFF8E44AD,
+                        in -> 0xFF555566
+                        ),
+
+        Blue( // name
+                        true, false, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.STATIC, // just leave this
+                        in -> 0xFFFFFFFE, // categoryNameRGB
+                        in -> 0xFF1A1A3A, // settingBackgroundRGB
+                        in -> 0xFF1A1A3A, // categoryBackgroundRGB
+                        in -> 0xFF3498DB, // enabledTopRGB
+                        in -> 0xFF2980B9, // enabledBottomRGB
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> 0xFF2A2A4A, // disabledTopRGB
+                        in -> 0xFF2A2A4A, // disabledBottomRGB
+                        in -> 0xFFCCCCCC, // disabledTextRGB
+                        in -> 0xFF0F0F2A, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        true, //boarder
+                        in -> 0xFF3498DB,
+                        in -> 0xFF2980B9,
+                        in -> 0xFF555577
+                        ),
+
+        Green( // name
+                        true, false, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.STATIC, // just leave this
+                        in -> 0xFFFFFFFE, // categoryNameRGB
+                        in -> 0xFF1A2A1A, // settingBackgroundRGB
+                        in -> 0xFF1A2A1A, // categoryBackgroundRGB
+                        in -> 0xFF27AE60, // enabledTopRGB
+                        in -> 0xFF229954, // enabledBottomRGB
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> 0xFF2A3A2A, // disabledTopRGB
+                        in -> 0xFF2A3A2A, // disabledBottomRGB
+                        in -> 0xFFCCCCCC, // disabledTextRGB
+                        in -> 0xFF0F2A0F, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        true, //boarder
+                        in -> 0xFF27AE60,
+                        in -> 0xFF229954,
+                        in -> 0xFF556655
+                        ),
+
+        Red( // name
+                        true, false, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.STATIC, // just leave this
+                        in -> 0xFFFFFFFE, // categoryNameRGB
+                        in -> 0xFF2A1A1A, // settingBackgroundRGB
+                        in -> 0xFF2A1A1A, // categoryBackgroundRGB
+                        in -> 0xFFE74C3C, // enabledTopRGB
+                        in -> 0xFFC0392B, // enabledBottomRGB
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> 0xFF3A2A2A, // disabledTopRGB
+                        in -> 0xFF3A2A2A, // disabledBottomRGB
+                        in -> 0xFFCCCCCC, // disabledTextRGB
+                        in -> 0xFF2A0F0F, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        true, //boarder
+                        in -> 0xFFE74C3C,
+                        in -> 0xFFC0392B,
+                        in -> 0xFF665555
+                        ),
+
+        Dark( // name
+                        false, false, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.STATIC, // just leave this
+                        in -> 0xFFFFFFFF, // categoryNameRGB
+                        in -> 0xFF1E1E1E, // settingBackgroundRGB
+                        in -> 0xFF252525, // categoryBackgroundRGB
+                        in -> 0xFF424242, // enabledTopRGB
+                        in -> 0xFF424242, // enabledBottomRGB
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> 0xFF2A2A2A, // disabledTopRGB
+                        in -> 0xFF2A2A2A, // disabledBottomRGB
+                        in -> 0xFFAAAAAA, // disabledTextRGB
+                        in -> 0xFF121212, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        false, //boarder
+                        in -> 0xFF424242,
+                        in -> 0xFF424242,
+                        in -> 0xFF555555
+                        ),
+
+        Rainbow( // name
+                        true, true, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.RAINBOW, // rainbow colors
+                        in -> Utils.Client.rainbowDraw(1, 0), // categoryNameRGB
+                        in -> Utils.Client.rainbowDraw(2, 0), // settingBackgroundRGB
+                        in -> Utils.Client.rainbowDraw(1, 0), // categoryBackgroundRGB
+                        in -> Utils.Client.rainbowDraw(2, 0), // enabledTopRGB
+                        in -> Utils.Client.rainbowDraw(2, 100), // enabledBottomRGB
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> Utils.Client.rainbowDraw(2, 200), // disabledTopRGB
+                        in -> Utils.Client.rainbowDraw(2, 300), // disabledBottomRGB
+                        in -> 0xFFCCCCCC, // disabledTextRGB
+                        in -> 0xFF1A1A1A, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        true, //boarder
+                        in -> Utils.Client.rainbowDraw(1, 0),
+                        in -> Utils.Client.rainbowDraw(1, 50),
+                        in -> Utils.Client.rainbowDraw(1, 100)
+                        ),
+
+        Neon( // name
+                        true, true, true, true, // showGradientEnabled - showGradientDisabled - useCustomFont -
+                        CNColor.RAINBOW, // rainbow colors
+                        in -> 0xFF00FFFF, // categoryNameRGB (cyan)
+                        in -> 0xFF1A0033, // settingBackgroundRGB (dark purple)
+                        in -> 0xFF1A0033, // categoryBackgroundRGB
+                        in -> 0xFFFF00FF, // enabledTopRGB (magenta)
+                        in -> 0xFF00FFFF, // enabledBottomRGB (cyan)
+                        in -> 0xFFFFFFFF, // enabledTextRGB
+                        in -> 0xFF330066, // disabledTopRGB
+                        in -> 0xFF330066, // disabledBottomRGB
+                        in -> 0xFFAAAAFF, // disabledTextRGB
+                        in -> 0xFF0A001A, // backgroundRGB
+                        true, //rounded
+                        true, //swing
+                        true, //boarder
+                        in -> 0xFFFF00FF,
+                        in -> 0xFF00FFFF,
+                        in -> Utils.Client.rainbowDraw(1, 0)
                         );
 
         public boolean showGradientEnabled, showGradientDisabled, useCustomFont, categoryBackground, roundedCorners, swing, boarder;

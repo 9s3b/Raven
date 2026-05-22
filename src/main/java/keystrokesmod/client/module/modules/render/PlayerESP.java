@@ -34,15 +34,17 @@ public class PlayerESP extends Module {
     public static TickSetting t5;
     public static TickSetting t6;
     public static TickSetting t7;
+    public static TickSetting t8;
     public static RGBSetting rgb;
     private int rgb_c;
 
     public PlayerESP() {
         super("PlayerESP", ModuleCategory.render);
-        this.registerSetting(rgb = new RGBSetting("RGB", 0, 255, 0));
+        this.registerSetting(rgb = new RGBSetting("RGB", 255, 100, 0));
         this.registerSetting(d = new TickSetting("Rainbow", false));
         this.registerSetting(g = new DescriptionSetting("ESP Types"));
         this.registerSetting(t3 = new TickSetting("2D", false));
+        this.registerSetting(t8 = new TickSetting("2D Corner", false));
         this.registerSetting(t5 = new TickSetting("Arrow", false));
         this.registerSetting(t1 = new TickSetting("Box", false));
         this.registerSetting(t4 = new TickSetting("Health", true));
@@ -147,6 +149,10 @@ public class PlayerESP extends Module {
 
         if (t6.isToggled()) {
             Utils.HUD.drawBoxAroundEntity(en, 6, i.getInput(), j.getInput(), rgb, h.isToggled());
+        }
+
+        if (t8.isToggled()) {
+            Utils.HUD.drawBoxAroundEntity(en, 7, i.getInput(), j.getInput(), rgb, h.isToggled());
         }
 
     }

@@ -130,12 +130,13 @@ public class CategoryComponent extends Component {
         if (categoryOpened || (tPercent < 1))
             if(openComponent != null) {
                 openComponent.setCoords(x, y + aHeight);
-                openComponent.draw(mouseX, mouseY);
+                openComponent.draw(mouseX, mouseY, true);
             } else {
                 int yOffset = 0;
-                for(ModuleComponent module : modulesInCategory) {
+                for(int i = 0; i < modulesInCategory.size(); i++) {
+                    ModuleComponent module = modulesInCategory.get(i);
                     module.setCoords(x, y + aHeight + yOffset);
-                    module.draw(mouseX, mouseY);
+                    module.draw(mouseX, mouseY, i == modulesInCategory.size() - 1);
                     yOffset += module.getHeight();
                 }
             }
@@ -212,7 +213,14 @@ public class CategoryComponent extends Component {
     }
 
     public boolean overExpandButton(int mouseX, int mouseY) {
-        return (mouseX > (x + marginX)) && (mouseX < (x + width)) && (mouseY > y) && (mouseY < (y + aHeight));
+        // Calculate the actual expand button bounds based on text position
+        String expandText = categoryOpened ? "-" : "+";
+        int textWidth = (int) FontUtil.normal.getStringWidth(expandText);
+        int expandButtonX = x + marginX;
+        int expandButtonY = y + marginY;
+        
+        return (mouseX >= expandButtonX) && (mouseX < (expandButtonX + textWidth + 4)) && 
+               (mouseY >= expandButtonY) && (mouseY < (expandButtonY + aHeight));
     }
 
     public boolean overName(int mouseX, int mouseY) {

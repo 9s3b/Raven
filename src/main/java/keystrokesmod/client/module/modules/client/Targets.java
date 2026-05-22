@@ -101,22 +101,37 @@ public class Targets extends Module {
 
     public static boolean isATeamMate(Entity entity) {
         try {
+            if (!(entity instanceof EntityPlayer)) return false;
             EntityPlayer bruhentity = (EntityPlayer) entity;
-            if (Raven.debugger) {
-                Utils.Player.sendMessageToSelf(
-                        "unformatted / " + bruhentity.getDisplayName().getUnformattedText().replace("§", "%"));
 
-                Utils.Player.sendMessageToSelf(
-                        "susbstring entity / " + bruhentity.getDisplayName().getUnformattedText().substring(0, 2));
-                Utils.Player.sendMessageToSelf(
-                        "substring player / " + mc.thePlayer.getDisplayName().getUnformattedText().substring(0, 2));
-            }
-            if (mc.thePlayer.isOnSameTeam((EntityLivingBase) entity) || mc.thePlayer.getDisplayName()
-                    .getUnformattedText().startsWith(bruhentity.getDisplayName().getUnformattedText().substring(0, 2)))
+            // 1. Vanilla scoreboard team check (hypixel, etc.)
+            if (mc.thePlayer.isOnSameTeam((EntityLivingBase) entity))
                 return true;
-        } catch (Exception fhwhfhwe) {
+
+            // 2. Color code prefix check - players with same team color
+            String entityFormatted = bruhentity.getDisplayName().getFormattedText();
+            String playerFormatted = mc.thePlayer.getDisplayName().getFormattedText();
+            if (entityFormatted.length() > 1 && playerFormatted.length() > 1) {
+                if (entityFormatted.charAt(1) == playerFormatted.charAt(1))
+                    return true;
+            }
+
+            // 3. Hypixel-style prefix check (same name prefix like "[MVP+]", "TEAM_")
+            String entityName = bruhentity.getDisplayName().getUnformattedText().replace("§", "");
+            String playerName = mc.thePlayer.getDisplayName().getUnformattedText().replace("§", "");
+            if (entityName.length() >= 2 && playerName.length() >= 2) {
+                String entityPrefix = entityName.substring(0, 2);
+                String playerPrefix = playerName.substring(0, 2);
+                if (entityPrefix.equals(playerPrefix))
+                    return true;
+            }
+
+            if (Raven.debugger) {
+                Utils.Player.sendMessageToSelf("Not teammates with " + bruhentity.getName());
+            }
+        } catch (Exception e) {
             if (Raven.debugger)
-                Utils.Player.sendMessageToSelf(fhwhfhwe.getMessage());
+                Utils.Player.sendMessageToSelf(e.getMessage());
         }
         return false;
     }

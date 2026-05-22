@@ -25,8 +25,7 @@ public class WaterBucket extends Module {
 
     public WaterBucket() {
         super("Water bucket", ModuleCategory.other);
-        this.registerSetting(moduleDesc = new DescriptionSetting("Credits: aycy"));
-        this.registerSetting(moduleDesc = new DescriptionSetting("Disabled in the Nether"));
+        this.registerSetting(moduleDesc = new DescriptionSetting("Credits: aycy - Disabled in the Nether"));
         this.registerSetting(distance = new SliderSetting("Fall Distance", 3, 1, 10, 0.1));
     }
 
@@ -91,9 +90,10 @@ public class WaterBucket extends Module {
 
     private void mlg() {
         ItemStack heldItem = mc.thePlayer.getHeldItem();
-        if (this.containsItem(heldItem, Items.water_bucket) && mc.thePlayer.rotationPitch >= 70.0F) {
+        if (this.containsItem(heldItem, Items.water_bucket) && mc.thePlayer.rotationPitch >= 45.0F) {
             MovingObjectPosition object = mc.objectMouseOver;
-            if (object.typeOfHit == MovingObjectType.BLOCK && object.sideHit == EnumFacing.UP) {
+            if (object != null && object.typeOfHit == MovingObjectType.BLOCK && object.sideHit == EnumFacing.UP) {
+                // Auto-click the water bucket
                 mc.playerController.sendUseItem(mc.thePlayer, mc.theWorld, heldItem);
             }
         }

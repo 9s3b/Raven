@@ -61,7 +61,7 @@ public class UpdateCheck extends Module {
                 } catch (MalformedURLException bruh) {
                     bruh.printStackTrace();
                     Utils.Player
-                            .sendMessageToSelf("&cFailed to open page! Please report this bug in Raven b++'s discord");
+                            .sendMessageToSelf("&cFailed to open page! Please report this bug in Raven B++'s discord");
                 }
             }
 

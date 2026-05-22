@@ -14,6 +14,10 @@ import keystrokesmod.client.module.modules.combat.HitBox;
 import keystrokesmod.client.module.modules.combat.Reach;
 import keystrokesmod.client.module.modules.combat.aura.KillAura;
 import keystrokesmod.client.module.modules.render.Fullbright;
+import keystrokesmod.client.module.modules.render.NoHurtCam;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.EntityRenderer;
 import net.minecraft.client.renderer.texture.DynamicTexture;
@@ -58,29 +62,11 @@ public class MixinEntityRenderer {
         if ((entity != null) && (this.mc.theWorld != null)) {
             this.mc.mcProfiler.startSection("pick");
             this.mc.pointedEntity = null;
-            double reach = this.mc.playerController.getBlockReachDistance();
-
+            double reach = Reach.getReach();
             this.mc.objectMouseOver = entity.rayTrace(reach, p_getMouseOver_1_);
             double distanceToVec = reach;
 
             Vec3 vec3 = entity.getPositionEyes(p_getMouseOver_1_);
-            boolean flag = false;
-
-
-            Module reachMod = Raven.moduleManager.getModuleByClazz(Reach.class);
-            Module aura = Raven.moduleManager.getModuleByClazz(KillAura.class);
-
-            if (!reachMod.isEnabled() && !aura.isEnabled()) {
-                if (this.mc.playerController.extendedReach()) {
-                    reach = 6.0D;
-                    distanceToVec = 6.0D;
-                } else if (reach > 3.0D)
-                    flag = true;
-            } else if (this.mc.playerController.extendedReach()) {
-                reach = 6.0D;
-                distanceToVec = 6.0D;
-            } else
-                reach = Reach.getReach();
 
             if (this.mc.objectMouseOver != null)
                 distanceToVec = this.mc.objectMouseOver.hitVec.distanceTo(vec3);
@@ -123,14 +109,7 @@ public class MixinEntityRenderer {
                 }
             }
 
-            if ((this.pointedEntity != null) && flag && (vec3.distanceTo(vec33) > (reachMod.isEnabled()? Reach.getReach() : 3.0D))) {
-                this.pointedEntity = null;
-                assert vec33 != null;
-                this.mc.objectMouseOver = new MovingObjectPosition(MovingObjectPosition.MovingObjectType.MISS, vec33,
-                        null, new BlockPos(vec33));
-            }
-
-            if ((this.pointedEntity != null) && ((d2 < distanceToVec) || (this.mc.objectMouseOver == null))) {
+            if ((this.pointedEntity != null) && (d2 < distanceToVec || this.mc.objectMouseOver == null)) {
                 this.mc.objectMouseOver = new MovingObjectPosition(this.pointedEntity, vec33);
                 if ((this.pointedEntity instanceof EntityLivingBase) || (this.pointedEntity instanceof EntityItemFrame))
                     this.mc.pointedEntity = this.pointedEntity;
@@ -266,5 +245,13 @@ public class MixinEntityRenderer {
             return 1;
         int i = entitylivingbaseIn.getActivePotionEffect(Potion.nightVision).getDuration();
         return i > 200 ? 1.0F : 0.7F + (MathHelper.sin(((float) i - partialTicks) * (float) Math.PI * 0.2F) * 0.3F);
+    }
+
+    @Inject(method = "hurtCameraEffect", at = @At("HEAD"), cancellable = true)
+    public void hurtCameraEffect(float partialTicks, CallbackInfo ci) {
+        Module noHurtCam = Raven.moduleManager.getModuleByClazz(NoHurtCam.class);
+        if (noHurtCam != null && noHurtCam.isEnabled()) {
+            ci.cancel();
+        }
     }
 }

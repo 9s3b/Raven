@@ -23,7 +23,7 @@ public class VersionManager {
     }
 
     private void createLatestVersion() {
-        String version = "1.0.0";
+        String version = "1.3.0";
         String branch = "";
         int branchCommit = 0;
         InputStream input;
@@ -61,7 +61,7 @@ public class VersionManager {
     }
 
     private void createClientVersion() {
-        String version = "1.0.0";
+        String version = "1.3.0";
         String branch = "";
         int branchCommit = 0;
         InputStream input;
