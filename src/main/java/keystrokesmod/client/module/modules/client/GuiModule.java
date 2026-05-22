@@ -14,7 +14,7 @@ public class GuiModule extends Module {
 
     private static ComboSetting preset;
 
-    private static TickSetting cleanUp, reset, betagui, modern, rainbowNotification, notifications, animeGirl;
+    private static TickSetting cleanUp, reset, rainbowNotification, notifications, animeGirl;
     private static SliderSetting animeGirlSize, animeGirlOpacity;
 
     public static int guiScale;
@@ -22,9 +22,6 @@ public class GuiModule extends Module {
     public GuiModule() {
         super("Gui", ModuleCategory.client);
         withKeycode(54);
-
-        this.registerSetting(betagui = new TickSetting("beta gui (VERY BETA)", false));
-        this.registerSetting(modern = new TickSetting("Modern UI", false));
         this.registerSetting(cleanUp = new TickSetting("Clean Up", false));
         this.registerSetting(reset = new TickSetting("Reset position", false));
         this.registerSetting(notifications = new TickSetting("Notifications", false));
@@ -32,7 +29,7 @@ public class GuiModule extends Module {
         this.registerSetting(animeGirl = new TickSetting("Anime Girl", false));
         this.registerSetting(animeGirlSize = new SliderSetting("Anime Girl Size", 202, 20, 500, 5));
         this.registerSetting(animeGirlOpacity = new SliderSetting("Anime Girl Opacity", 80, 10, 100, 5));
-        this.registerSetting(preset = new ComboSetting("Preset", Preset.PlusPlus));
+        this.registerSetting(preset = new ComboSetting("Preset", Preset.Orange));
     }
 
     @Override
@@ -50,21 +47,10 @@ public class GuiModule extends Module {
 
     @Override
     public void onEnable() {
-        if (Utils.Player.isPlayerInGame() && ((mc.currentScreen != Raven.clickGui) || (mc.currentScreen != Raven.kvCompactGui)))
-            if (modern.isToggled()) {
-                mc.displayGuiScreen(Raven.modernClickGui);
-            } else if(betagui.isToggled()) {
-                guiScale = mc.gameSettings.guiScale;
-                mc.gameSettings.guiScale = 3;
-                mc.displayGuiScreen(Raven.kvCompactGui);
-                Raven.kvCompactGui.initGui();
-                Raven.kvCompactGui.initGui(); //no idea why this works
-            }
-            else {
-                mc.displayGuiScreen(Raven.clickGui);
-                Raven.clickGui.initMain();
-            }
-
+        if (Utils.Player.isPlayerInGame() && ((mc.currentScreen != Raven.clickGui) || (mc.currentScreen != Raven.kvCompactGui))) {
+            mc.displayGuiScreen(Raven.clickGui);
+            Raven.clickGui.initMain();
+        }
         this.disable();
     }
 
